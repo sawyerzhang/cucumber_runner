@@ -4,18 +4,30 @@
 
 
 
-
+@@names = nil
 
 
 
 def get_cucumber_scenario_names
 
   cmd = 'zeus cucumber' << " -d -f Cucumber::Formatter::ListScenarioName"
+   %x{ #{cmd} }
 
-  puts %x{ #{cmd} }
+
+  File.open('/tmp/cucumber_runner.tmp','r') do |f|
+    @@names=  Marshal.load(f.read())
+  end
+  print_names
 end
 
+def print_names
 
+  @@names.each {|key,value|
+    puts key
+    value.each {|tag| puts "\t\t"<< tag }
+  }
+
+end
 
 get_cucumber_scenario_names
 
