@@ -1,0 +1,37 @@
+#!/usr/bin/env ruby
+
+
+
+
+
+
+
+
+
+def get_cucumber_scenario_names
+
+  cmd = 'zeus cucumber' << " -d -f Cucumber::Formatter::ListScenarioName"
+
+  puts %x{ #{cmd} }
+end
+
+
+
+get_cucumber_scenario_names
+
+
+while input = gets.chomp
+
+
+  case input
+
+    when 'S'
+      exit 0
+
+  end
+
+
+
+end
+
+
