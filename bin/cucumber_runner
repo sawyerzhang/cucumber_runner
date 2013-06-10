@@ -1,17 +1,72 @@
 #!/usr/bin/env ruby
 
 
+def display_help
+  puts "cucumber_runner:
+
+        runs cucumber scenarios by their name individully
+          -h, show this help page
+          --user_zeus, use zeus or not
+
+        example:
+          cucumber_runner ios_feature --use_zeus
+
+      "
+end
+
+
+# filter the args
+def filter_args
+
+  while arg= ARGV.shift
+
+
+    case arg
+      when "-h"
+        @ask_help=true
+      when "--use_zeus"
+        @use_zeus=true
+      else
+        @feature_dir = arg
+    end
+  end
+
+  #check help
+  if @ask_help
+    display_help
+    exit! 0
+  end
+
+  #if use zeus and zeus is not running, exit
+  if @use_zeus
+
+    ps_line =`ps aux |grep zeus`
+    #puts ps_line
+    if ps_line.lines.count<4
+      puts "you have to start zeus first"
+      exit! 0
+    end
+
+  end
+
+end
 
 
 
-@@names = nil
+# construct the cucumber command
+def form_command
+
+  @zeus = @use_zeus.nil?? "": "zeus"
+  @feature_dir = @feature_dir.nil?? "": @feature_dir
+  @cmd = "#{@zeus} cucumber #{@feature_dir} " << " -d -f Cucumber::Formatter::ListScenarioName"
+
+end
 
 
-
+#get names dict from the tmp file
 def get_cucumber_scenario_names
 
-  cmd = 'zeus cucumber' << " -d -f Cucumber::Formatter::ListScenarioName"
-   %x{ #{cmd} }
+  %x{ #{@cmd} }
 
 
   File.open('/tmp/cucumber_runner.tmp','r') do |f|
@@ -29,6 +84,10 @@ def print_names
 
 end
 
+
+
+filter_args
+form_command
 get_cucumber_scenario_names
 
 
