@@ -1,12 +1,14 @@
 #!/usr/bin/env ruby
 
-
+require 'open3'
 def display_help
   puts "cucumber_runner:
 
-        runs cucumber scenarios by their name individully
+        runs cucumber scenarios by their name individually
           -h, show this help page
           --user_zeus, use zeus or not
+
+          set environment variables, they'll be pass to cucumber as is
 
         example:
           cucumber_runner ios_feature --use_zeus
@@ -18,6 +20,8 @@ end
 # filter the args
 def filter_args
 
+  #hold env variables
+  @env||=[]
   while arg= ARGV.shift
 
 
@@ -26,6 +30,8 @@ def filter_args
         @ask_help=true
       when "--use_zeus"
         @use_zeus=true
+      when /=/
+        @env << arg
       else
         @feature_dir = arg
     end
@@ -67,29 +73,46 @@ end
 def get_cucumber_scenario_names
 
   %x{ #{@cmd} }
-
-
   File.open('/tmp/cucumber_runner.tmp','r') do |f|
     @@names=  Marshal.load(f.read())
   end
   print_names
 end
 
+#print scenarios names
 def print_names
 
+  i=0
+  @@flatten_names ={}
   @@names.each {|key,value|
     puts key
-    value.each {|tag| puts "\t\t"<< tag }
+    value.each_with_index {|tag,index|
+      key = "#{i}#{index}"
+      puts "\t\t#{key} #{tag}"
+      @@flatten_names[key]=tag
+    }
+    i+=1
   }
 
 end
+
+#the heavy lifting,
+def run_cmd(cmd)
+  #get continuous output
+  Open3.popen3({"NO_LAUNCH"=>"1"},cmd) do |i,o,e|
+    until o.eof?
+      puts o.readline
+    end
+  end
+
+end
+
 
 
 
 filter_args
 form_command
 get_cucumber_scenario_names
-
 
 while input = gets.chomp
 
@@ -98,6 +121,13 @@ while input = gets.chomp
 
     when 'S'
       exit 0
+    else
+
+      if @@flatten_names.has_key?input
+        cmd = "#{@zeus} cucumber #{@feature_dir} -n \"#{@@flatten_names[input]}\" #{@env.join(" ")} "
+        puts cmd
+        run_cmd cmd
+      end
 
   end
 
