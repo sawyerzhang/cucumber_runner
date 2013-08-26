@@ -8,7 +8,7 @@ def display_help
           -h, show this help page
           --user_zeus, use zeus or not
 
-          set environment variables, they'll be pass to cucumber as is
+          set environment variables, they'll be pass to cucumber as they are
 
         example:
           cucumber_runner ios_feature --use_zeus
@@ -119,8 +119,10 @@ while input = gets.chomp
 
   case input
 
-    when 'S'
+    when 's'
       exit 0
+    when 'l'
+      get_cucumber_scenario_names
     else
 
       if @@flatten_names.has_key?input
